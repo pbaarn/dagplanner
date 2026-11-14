@@ -1,0 +1,3365 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <script>
+        try {
+            const savedScheme = localStorage.getItem('color-scheme');
+            if (savedScheme === 'light' || savedScheme === 'dark') {
+                document.querySelector('meta[name="color-scheme"]').content = savedScheme;
+            }
+        } catch (e) {}
+    </script>
+    <title>TijdBewust — Dagdeel Planner</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <style>
+        /* --- Kleur & Thema Tokens --- */
+        :root {
+            color-scheme: light dark;
+
+            --bg-page: light-dark(#f5f5f4, #141210);
+            --bg-surface: light-dark(#ffffff, #1c1917);
+            --bg-subtle: light-dark(#fafaf9, #26221f);
+            --bg-hover: light-dark(#f5f5f4, #2e2925);
+            --bg-inverse: light-dark(#1c1917, #f5f5f4);
+            --text-inverse: light-dark(#ffffff, #1c1917);
+
+            --border-default: light-dark(#e7e5e4, #36312d);
+            --border-strong: light-dark(#d6d3d1, #4a443f);
+            --border-subtle: light-dark(#f5f5f4, #292524);
+
+            --text-primary: light-dark(#1c1917, #f5f5f4);
+            --text-secondary: light-dark(#57534e, #c4beb8);
+            --text-muted: light-dark(#78716c, #9a938d);
+            --text-faint: light-dark(#a8a29e, #6b6560);
+
+            --brand: light-dark(#059669, #10b981);
+            --brand-hover: light-dark(#047857, #34d399);
+            --brand-fg: light-dark(#ffffff, #052e16);
+            --brand-soft-bg: light-dark(#ecfdf5, #064e3b);
+            --brand-soft-text: light-dark(#065f46, #a7f3d0);
+            --brand-soft-border: light-dark(#6ee7b7, #059669);
+
+            --danger: light-dark(#e11d48, #fb7185);
+            --danger-hover: light-dark(#be123c, #f43f5e);
+            --danger-fg: light-dark(#ffffff, #4c0519);
+            --danger-soft-bg: light-dark(#fff1f2, #4c0519);
+            --danger-soft-text: light-dark(#be123c, #fecdd3);
+            --danger-soft-border: light-dark(#fecdd3, #881337);
+
+            /* Activiteiten-palet */
+            --c-emerald-bg: light-dark(#ecfdf5, #063b2d);
+            --c-emerald-border: light-dark(#6ee7b7, #059669);
+            --c-emerald-text: light-dark(#064e3b, #d1fae5);
+            --c-emerald-dot: #10b981;
+            --c-emerald-badge-bg: light-dark(#d1fae5, #065f46);
+            --c-emerald-badge-text: light-dark(#065f46, #ecfdf5);
+
+            --c-sky-bg: light-dark(#f0f9ff, #0c2d48);
+            --c-sky-border: light-dark(#7dd3fc, #0284c7);
+            --c-sky-text: light-dark(#0c4a6e, #e0f2fe);
+            --c-sky-dot: #0ea5e9;
+            --c-sky-badge-bg: light-dark(#e0f2fe, #075985);
+            --c-sky-badge-text: light-dark(#075985, #f0f9ff);
+
+            --c-amber-bg: light-dark(#fffbeb, #3d2405);
+            --c-amber-border: light-dark(#fcd34d, #d97706);
+            --c-amber-text: light-dark(#78350f, #fef3c7);
+            --c-amber-dot: #f59e0b;
+            --c-amber-badge-bg: light-dark(#fef3c7, #92400e);
+            --c-amber-badge-text: light-dark(#92400e, #fffbeb);
+
+            --c-rose-bg: light-dark(#fff1f2, #420c1b);
+            --c-rose-border: light-dark(#fda4af, #e11d48);
+            --c-rose-text: light-dark(#881337, #ffe4e6);
+            --c-rose-dot: #f43f5e;
+            --c-rose-badge-bg: light-dark(#ffe4e6, #9f1239);
+            --c-rose-badge-text: light-dark(#9f1239, #fff1f2);
+
+            --c-violet-bg: light-dark(#f5f3ff, #27174a);
+            --c-violet-border: light-dark(#c4b5fd, #7c3aed);
+            --c-violet-text: light-dark(#4c1d95, #ede9fe);
+            --c-violet-dot: #8b5cf6;
+            --c-violet-badge-bg: light-dark(#ede9fe, #5b21b6);
+            --c-violet-badge-text: light-dark(#5b21b6, #f5f3ff);
+
+            --c-stone-bg: light-dark(#f5f5f4, #292524);
+            --c-stone-border: light-dark(#d6d3d1, #57534e);
+            --c-stone-text: light-dark(#1c1917, #f5f5f4);
+            --c-stone-dot: #78716c;
+            --c-stone-badge-bg: light-dark(#e7e5e4, #44403c);
+            --c-stone-badge-text: light-dark(#292524, #f5f5f4);
+
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 4px 10px -6px rgba(0, 0, 0, 0.12);
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+
+        /* Reflect <meta name="color-scheme"> overrides in CSS */
+        :root:has(> head > meta[name="color-scheme"][content="dark"]) {
+            color-scheme: dark;
+        }
+        :root:has(> head > meta[name="color-scheme"][content="light"]) {
+            color-scheme: light;
+        }
+
+        /* Fallback voor oudere browsers zonder light-dark() */
+        @supports not (color: light-dark(white, black)) {
+            :root {
+                --bg-page: #f5f5f4;
+                --bg-surface: #ffffff;
+                --bg-subtle: #fafaf9;
+                --bg-hover: #f5f5f4;
+                --bg-inverse: #1c1917;
+                --text-inverse: #ffffff;
+                --border-default: #e7e5e4;
+                --border-strong: #d6d3d1;
+                --border-subtle: #f5f5f4;
+                --text-primary: #1c1917;
+                --text-secondary: #57534e;
+                --text-muted: #78716c;
+                --text-faint: #a8a29e;
+                --brand: #059669;
+                --brand-hover: #047857;
+                --brand-fg: #ffffff;
+                --brand-soft-bg: #ecfdf5;
+                --brand-soft-text: #065f46;
+                --brand-soft-border: #6ee7b7;
+                --danger: #e11d48;
+                --danger-hover: #be123c;
+                --danger-fg: #ffffff;
+                --danger-soft-bg: #fff1f2;
+                --danger-soft-text: #be123c;
+                --danger-soft-border: #fecdd3;
+            }
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --bg-page: #141210;
+                    --bg-surface: #1c1917;
+                    --bg-subtle: #26221f;
+                    --bg-hover: #2e2925;
+                    --bg-inverse: #f5f5f4;
+                    --text-inverse: #1c1917;
+                    --border-default: #36312d;
+                    --border-strong: #4a443f;
+                    --border-subtle: #292524;
+                    --text-primary: #f5f5f4;
+                    --text-secondary: #c4beb8;
+                    --text-muted: #9a938d;
+                    --text-faint: #6b6560;
+                    --brand: #10b981;
+                    --brand-hover: #34d399;
+                    --brand-fg: #052e16;
+                    --brand-soft-bg: #064e3b;
+                    --brand-soft-text: #a7f3d0;
+                    --brand-soft-border: #059669;
+                    --danger: #fb7185;
+                    --danger-hover: #f43f5e;
+                    --danger-fg: #4c0519;
+                    --danger-soft-bg: #4c0519;
+                    --danger-soft-text: #fecdd3;
+                    --danger-soft-border: #881337;
+                }
+            }
+        }
+
+        /* --- Basis Reset & Typografie --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.45;
+        }
+
+        ::selection {
+            background-color: var(--brand-soft-bg);
+            color: var(--brand-soft-text);
+        }
+
+        button, input, select, textarea {
+            font: inherit;
+            color: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--brand);
+            outline-offset: 2px;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Scrollbars */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-strong) transparent;
+        }
+
+        /* --- Header --- */
+        .app-header {
+            background-color: var(--bg-surface);
+            border-bottom: 1px solid var(--border-default);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .header-inner {
+            max-width: 68rem;
+            margin: 0 auto;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.75rem;
+            background-color: var(--brand);
+            color: var(--brand-fg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-xs);
+            flex-shrink: 0;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Dag navigatie */
+        .day-nav {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 0.2rem;
+            gap: 0.15rem;
+        }
+
+        .day-tab {
+            padding: 0.35rem 0.7rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            color: var(--text-muted);
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .day-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .day-tab.active {
+            background-color: var(--bg-surface);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-xs);
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.55rem;
+            color: var(--text-secondary);
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .icon-btn:hover:not(:disabled) {
+            background-color: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .date-input-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .date-picker-input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .btn-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-xs);
+            transition: background-color 0.15s, transform 0.1s;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--bg-hover);
+        }
+
+        .btn-outline:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn-danger-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background-color: var(--danger-soft-bg);
+            border: 1px solid var(--danger-soft-border);
+            border-radius: var(--radius-lg);
+            color: var(--danger-soft-text);
+            transition: filter 0.15s, transform 0.1s;
+        }
+
+        .btn-danger-soft:hover:not(:disabled) {
+            filter: brightness(0.96);
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: var(--brand);
+            color: var(--brand-fg);
+            border-radius: var(--radius-lg);
+            transition: background-color 0.15s, transform 0.1s;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background-color: var(--brand-hover);
+        }
+
+        .btn-dark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.9rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background-color: var(--bg-inverse);
+            color: var(--text-inverse);
+            border-radius: var(--radius-lg);
+            transition: opacity 0.15s;
+        }
+
+        .btn-dark:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: var(--danger);
+            color: var(--danger-fg);
+            border-radius: var(--radius-lg);
+            width: 100%;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--danger-hover);
+        }
+
+        /* Theme toggle icon visibility via CSS (works even without JS) */
+        .theme-icon-sun { display: none; }
+        .theme-icon-moon { display: inline-flex; }
+        @media (prefers-color-scheme: dark) {
+            .theme-icon-sun { display: inline-flex; }
+            .theme-icon-moon { display: none; }
+        }
+        :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-icon-sun { display: inline-flex; }
+        :root:has(> head > meta[name="color-scheme"][content="dark"]) .theme-icon-moon { display: none; }
+        :root:has(> head > meta[name="color-scheme"][content="light"]) .theme-icon-sun { display: none; }
+        :root:has(> head > meta[name="color-scheme"][content="light"]) .theme-icon-moon { display: inline-flex; }
+
+        /* --- Hoofdindeling --- */
+        .main-grid {
+            flex: 1;
+            max-width: 68rem;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.25rem 1rem 6.5rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 960px) {
+            .main-grid {
+                grid-template-columns: 7fr 5fr;
+                padding: 1.5rem 1.5rem 3rem;
+            }
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: 1.15rem;
+            box-shadow: var(--shadow-xs);
+        }
+
+        /* --- Tijdsvenster & Voortgang --- */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        @media (min-width: 640px) {
+            .summary-card {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+        }
+
+        .day-heading-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .day-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .date-pill {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.15rem 0.55rem;
+            border-radius: 9999px;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+        }
+
+        .progress-text {
+            margin: 0.25rem 0 0;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .range-picker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.78rem;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            padding: 0.4rem 0.6rem;
+            border-radius: var(--radius-lg);
+            align-self: flex-start;
+        }
+
+        .range-select {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: 0.45rem;
+            padding: 0.2rem 0.4rem;
+            font-weight: 600;
+            font-size: 0.78rem;
+        }
+
+        .hint-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 0.25rem;
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            gap: 0.5rem;
+        }
+
+        .link-btn {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--brand);
+        }
+
+        .link-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Tijdlijn --- */
+        .timeslots-list {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xs);
+            overflow: hidden;
+        }
+
+        .slot-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 0.85rem;
+            border-left: 4px solid transparent;
+            border-top: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: background-color 0.12s, border-color 0.12s;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .slot-row:first-child {
+            border-top: none;
+        }
+
+        .slot-row.slot-hour-start:not(:first-child) {
+            border-top: 1px solid var(--border-default);
+        }
+
+        .slot-row:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Contiguous grouping */
+        .slot-row.slot-group-mid,
+        .slot-row.slot-group-end {
+            border-top-style: dashed;
+            border-top-color: var(--border-default);
+        }
+
+        /* Current time slot highlight */
+        .slot-row.slot-now {
+            box-shadow: inset 0 0 0 1px var(--brand);
+        }
+
+        .now-pill {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            background-color: var(--brand);
+            color: var(--brand-fg);
+            flex-shrink: 0;
+        }
+
+        /* Selected state */
+        .slot-row[data-selected="true"] {
+            background-color: var(--brand-soft-bg) !important;
+            border-left-color: var(--brand) !important;
+        }
+
+        /* Left selection handle (touch-action: none allows smooth touch dragging) */
+        .slot-left {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            min-width: 7.75rem;
+            flex-shrink: 0;
+            touch-action: none;
+            padding: 0.2rem 0;
+        }
+
+        .slot-checkbox {
+            width: 1.05rem;
+            height: 1.05rem;
+            border-radius: 0.32rem;
+            border: 1.5px solid var(--border-strong);
+            background-color: var(--bg-surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background-color 0.12s, border-color 0.12s;
+        }
+
+        .slot-row[data-selected="true"] .slot-checkbox {
+            background-color: var(--brand);
+            border-color: var(--brand);
+            color: var(--brand-fg);
+        }
+
+        .slot-time {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .slot-row.slot-half .slot-time {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .slot-center {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .slot-content-wrap {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            gap: 0.2rem;
+        }
+
+        .slot-badge-line {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            min-width: 0;
+        }
+
+        .activity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            max-width: 100%;
+            min-width: 0;
+        }
+
+        .activity-badge.completed {
+            background-color: var(--bg-subtle) !important;
+            color: var(--text-muted) !important;
+            text-decoration: line-through;
+        }
+
+        .activity-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .streak-pill {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            padding: 0.1rem 0.4rem;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .slot-note-preview {
+            font-size: 0.73rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-left: 0.15rem;
+        }
+
+        .slot-empty-text {
+            font-size: 0.76rem;
+            color: var(--text-faint);
+            font-style: italic;
+        }
+
+        .slot-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            flex-shrink: 0;
+        }
+
+        .note-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.85rem;
+            height: 1.85rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-default);
+            background-color: var(--bg-surface);
+            color: var(--text-muted);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .note-btn:hover, .note-btn.has-note {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .complete-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.6rem;
+            border-radius: 0.6rem;
+            font-size: 0.74rem;
+            font-weight: 600;
+            border: 1px solid var(--border-default);
+            background-color: var(--bg-surface);
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+
+        .complete-toggle:hover {
+            border-color: var(--brand);
+            color: var(--brand);
+        }
+
+        .complete-toggle.is-done {
+            background-color: var(--brand);
+            border-color: var(--brand);
+            color: var(--brand-fg);
+        }
+
+        .complete-label {
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .complete-label {
+                display: inline;
+            }
+        }
+
+        /* --- Rechterkolom: Toewijzen & Vaste Activiteiten --- */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.65rem;
+        }
+
+        .card-title {
+            margin: 0;
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .card-subtitle {
+            margin: 0.2rem 0 0;
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .selection-badge {
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+        }
+
+        .selection-badge.has-selection {
+            background-color: var(--brand-soft-bg);
+            border-color: var(--brand-soft-border);
+            color: var(--brand-soft-text);
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.5rem;
+            margin: 0.9rem 0;
+        }
+
+        .quick-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-default);
+            font-size: 0.82rem;
+            font-weight: 500;
+            text-align: left;
+            transition: filter 0.15s, transform 0.1s;
+            min-width: 0;
+        }
+
+        .quick-btn:disabled {
+            background-color: var(--bg-subtle) !important;
+            border-color: var(--border-default) !important;
+            color: var(--text-faint) !important;
+        }
+
+        .quick-btn:not(:disabled):hover {
+            filter: brightness(0.96);
+        }
+
+        .color-dot {
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .form-divider {
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--border-default);
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .text-input {
+            flex: 1;
+            min-width: 0;
+            font-size: 0.86rem;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+        }
+
+        .text-input:focus {
+            background-color: var(--bg-surface);
+            outline: 2px solid var(--brand);
+            outline-offset: 0;
+        }
+
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .color-dots {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .color-swatch {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            opacity: 0.75;
+            transition: transform 0.12s, opacity 0.12s;
+        }
+
+        .color-swatch:hover {
+            opacity: 1;
+        }
+
+        .color-swatch[aria-pressed="true"] {
+            opacity: 1;
+            transform: scale(1.15);
+            outline: 2px solid var(--text-primary);
+            outline-offset: 2px;
+        }
+
+        .template-form-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            padding: 0.75rem;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            margin: 0.85rem 0;
+        }
+
+        .templates-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            max-height: 18rem;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0.48rem 0.65rem;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+        }
+
+        .template-item-left {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .template-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .template-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            flex-shrink: 0;
+        }
+
+        .template-edit-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            width: 100%;
+        }
+
+        .btn-clear-slots {
+            width: 100%;
+            margin-top: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .btn-clear-slots:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* --- Mobiele Zwevende Balk --- */
+        .mobile-floating-bar {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            z-index: 40;
+            background-color: var(--bg-inverse);
+            color: var(--text-inverse);
+            padding: 0.75rem 0.9rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .mobile-floating-bar.is-hidden {
+            transform: translateY(7rem);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media (min-width: 960px) {
+            .mobile-floating-bar {
+                display: none;
+            }
+        }
+
+        .mobile-count-pill {
+            background-color: var(--brand);
+            color: var(--brand-fg);
+            font-weight: 700;
+            font-size: 0.78rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: 0.5rem;
+        }
+
+        /* --- Native <dialog> Modals --- */
+        dialog.app-dialog {
+            border: 1px solid var(--border-default);
+            border-radius: 1.25rem;
+            background-color: var(--bg-surface);
+            color: var(--text-primary);
+            padding: 1.35rem;
+            width: min(32rem, calc(100vw - 2rem));
+            max-height: calc(100dvh - 2rem);
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            margin: auto;
+        }
+
+        dialog.app-dialog:modal {
+            overscroll-behavior: contain;
+        }
+
+        dialog.app-dialog::backdrop {
+            background-color: rgba(0, 0, 0, 0.52);
+            backdrop-filter: blur(3px);
+            overflow: hidden;
+            overscroll-behavior: contain;
+        }
+
+        .dialog-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .dialog-title {
+            margin: 0;
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        .dialog-subtitle {
+            margin: 0.2rem 0 0;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .dialog-close-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.6rem;
+            background-color: var(--bg-subtle);
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .dialog-close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .export-tabs {
+            display: flex;
+            gap: 0.35rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .export-tab {
+            padding: 0.35rem 0.7rem;
+            border-radius: 0.55rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            color: var(--text-secondary);
+        }
+
+        .export-tab[aria-selected="true"] {
+            background-color: var(--brand-soft-bg);
+            border-color: var(--brand-soft-border);
+            color: var(--brand-soft-text);
+        }
+
+        .export-textarea {
+            width: 100%;
+            min-height: 13rem;
+            padding: 0.8rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.76rem;
+            line-height: 1.5;
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            resize: vertical;
+            margin-bottom: 0.85rem;
+        }
+
+        .dialog-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .backup-box {
+            margin-top: 1rem;
+            padding-top: 0.9rem;
+            border-top: 1px solid var(--border-default);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .backup-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .reset-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        /* --- Toast Meldingen --- */
+        .toast-container {
+            position: fixed;
+            top: 4.5rem;
+            right: 1rem;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+            max-width: calc(100vw - 2rem);
+        }
+
+        .toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            background-color: var(--bg-inverse);
+            color: var(--text-inverse);
+            padding: 0.6rem 0.9rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.82rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            transition: opacity 0.25s, transform 0.25s;
+        }
+
+        .toast.toast-error {
+            background-color: var(--danger);
+            color: var(--danger-fg);
+        }
+
+        .toast-undo-btn {
+            font-weight: 700;
+            text-decoration: underline;
+            font-size: 0.8rem;
+            color: inherit;
+        }
+
+        .toast.is-leaving {
+            opacity: 0;
+            transform: translateY(-0.5rem);
+        }
+
+        /* --- Opslag & GitHub Gist Sync --- */
+        .sync-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 9999px;
+            background-color: var(--text-faint);
+            flex-shrink: 0;
+        }
+        .sync-dot.is-gist { background-color: var(--brand); }
+        .sync-dot.is-syncing { background-color: var(--c-amber-dot); }
+        .sync-dot.is-error { background-color: var(--danger); }
+
+        .storage-mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.55rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .storage-option {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            padding: 0.7rem;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border-default);
+            background-color: var(--bg-subtle);
+            text-align: left;
+            transition: border-color 0.15s, background-color 0.15s;
+        }
+
+        .storage-option[aria-pressed="true"] {
+            border-color: var(--brand);
+            background-color: var(--brand-soft-bg);
+        }
+
+        .storage-option-title {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .storage-option-desc {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .gist-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-default);
+        }
+
+        .gist-status-box {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            background-color: var(--bg-subtle);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            padding: 0.55rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .gist-link {
+            color: var(--brand);
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        .gist-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- Bovenbalk -->
+    <header class="app-header">
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-logo" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="brand-title">TijdBewust</h1>
+                    <p class="brand-subtitle">Bewust omgaan met je vrije tijd</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Dag-kiezer met Vandaag / Morgen / Datumkiezer -->
+                <nav class="day-nav" aria-label="Dag kiezen">
+                    <button type="button" id="btn-prev-day" class="icon-btn" title="Vorige dag" aria-label="Vorige dag">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button type="button" id="btn-day-today" class="day-tab">Vandaag</button>
+                    <button type="button" id="btn-day-tomorrow" class="day-tab">Morgen</button>
+                    <button type="button" id="btn-next-day" class="icon-btn" title="Volgende dag" aria-label="Volgende dag">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    <label class="icon-btn date-input-wrap" title="Kies specifieke datum">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <input type="date" id="date-picker" class="date-picker-input" aria-label="Kies specifieke datum">
+                    </label>
+                </nav>
+
+                <!-- Ongedaan maken / Opnieuw -->
+                <div class="day-nav" aria-label="Geschiedenis">
+                    <button type="button" id="btn-undo" class="icon-btn" title="Ongedaan maken (Ctrl/Cmd+Z)" aria-label="Ongedaan maken" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                    </button>
+                    <button type="button" id="btn-redo" class="icon-btn" title="Opnieuw (Ctrl/Cmd+Shift+Z)" aria-label="Opnieuw" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+                    </button>
+                </div>
+
+                <!-- Thema wisselaar -->
+                <button type="button" id="btn-theme-toggle" class="btn-outline" title="Wissel licht/donker thema" aria-label="Wissel kleurthema">
+                    <span class="theme-icon-sun" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    </span>
+                    <span class="theme-icon-moon" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    </span>
+                    <span class="sr-only">Wissel kleurthema</span>
+                </button>
+
+                <button type="button" id="btn-open-gist" class="btn-outline" title="Opslag & GitHub Gist synchronisatie">
+                    <span id="sync-status-dot" class="sync-dot" aria-hidden="true"></span>
+                    <span id="sync-status-label">Lokaal</span>
+                </button>
+
+                <button type="button" id="btn-open-export" class="btn-outline">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Exporteren</span>
+                </button>
+
+                <button type="button" id="btn-open-reset" class="btn-danger-soft">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                    </svg>
+                    <span>Resetten</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hoofdinhoud -->
+    <main class="main-grid">
+        <!-- Linkerkolom: Tijdlijn -->
+        <section class="column" aria-label="Dagplanning">
+            <div class="card summary-card">
+                <div>
+                    <div class="day-heading-row">
+                        <h2 id="current-day-title" class="day-title">Planning voor Vandaag</h2>
+                        <span id="current-date-label" class="date-pill"></span>
+                    </div>
+                    <p id="progress-summary" class="progress-text">Nog geen blokken ingepland.</p>
+                </div>
+
+                <div class="range-picker">
+                    <label for="start-hour-select" style="color: var(--text-muted); font-weight: 500;">Dagdeel:</label>
+                    <select id="start-hour-select" class="range-select" aria-label="Startuur"></select>
+                    <span style="color: var(--text-faint);">tot</span>
+                    <select id="end-hour-select" class="range-select" aria-label="Einduur"></select>
+                </div>
+            </div>
+
+            <div class="hint-bar">
+                <span>Tik of sleep over blokken van 30 min (of gebruik Spatie / Shift+Pijltjes).</span>
+                <button type="button" id="btn-clear-selection" class="link-btn hidden">Selectie wissen</button>
+            </div>
+
+            <div id="timeslots-container" class="timeslots-list no-select" role="listbox" aria-multiselectable="true" aria-label="Tijdsblokken van 30 minuten"></div>
+        </section>
+
+        <!-- Rechterkolom: Activiteiten toewijzen & beheren -->
+        <aside class="column" aria-label="Activiteiten beheren">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Activiteit toewijzen</h3>
+                    <span id="selection-badge" class="selection-badge">0 blokken geselecteerd</span>
+                </div>
+
+                <p id="assign-hint" class="card-subtitle">
+                    Selecteer eerst één of meerdere tijdsblokken links om een activiteit in te plannen.
+                </p>
+
+                <div id="quick-activities-grid" class="quick-grid"></div>
+
+                <form id="custom-activity-form" class="form-divider">
+                    <label for="custom-activity-input" class="field-label">Afwijkende activiteit</label>
+                    <div class="input-row">
+                        <input type="text" id="custom-activity-input" placeholder="Bijv. Boek uitlezen, wandelen..." class="text-input">
+                        <button type="submit" id="btn-assign-custom" class="btn-primary" disabled>Plan</button>
+                    </div>
+                    <input type="text" id="custom-note-input" placeholder="Optionele notitie..." maxlength="120" class="text-input" aria-label="Optionele notitie bij afwijkende activiteit">
+                    <div class="color-picker-row">
+                        <span class="field-label" style="font-weight: 500; color: var(--text-muted);">Kleur:</span>
+                        <div id="custom-color-picker" class="color-dots" role="group" aria-label="Kleur voor afwijkende activiteit"></div>
+                    </div>
+                </form>
+
+                <div id="clear-slots-wrapper" class="hidden">
+                    <button type="button" id="btn-clear-slots" class="btn-clear-slots">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        <span>Geselecteerde blokken vrijmaken</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <h3 class="card-title">Mijn vaste activiteiten</h3>
+                    <p class="card-subtitle">Voeg vaste activiteiten toe, pas ze aan of wijzig de volgorde.</p>
+                </div>
+
+                <form id="add-template-form" class="template-form-box">
+                    <div class="input-row">
+                        <input type="text" id="new-template-name" placeholder="Nieuwe activiteit..." required maxlength="32" class="text-input" aria-label="Naam nieuwe vaste activiteit">
+                        <button type="submit" class="btn-dark">+ Toevoegen</button>
+                    </div>
+                    <div class="color-picker-row">
+                        <span style="font-size: 0.76rem; color: var(--text-muted); font-weight: 500;">Labelkleur:</span>
+                        <div id="color-picker-container" class="color-dots" role="group" aria-label="Kleur voor nieuwe vaste activiteit"></div>
+                    </div>
+                </form>
+
+                <ul id="templates-manage-list" class="templates-list"></ul>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Zwevende Mobiele Actiebalk -->
+    <div id="mobile-floating-bar" class="mobile-floating-bar is-hidden">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span id="mobile-selection-count" class="mobile-count-pill">1</span>
+            <span style="font-size: 0.85rem; font-weight: 500;">blok(ken) gekozen</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <button type="button" id="btn-mobile-cancel" style="padding: 0.4rem 0.6rem; font-size: 0.78rem; color: inherit; opacity: 0.8;">Annuleer</button>
+            <button type="button" id="btn-mobile-open-assign" class="btn-primary" style="font-size: 0.78rem; padding: 0.45rem 0.85rem;">Kies activiteit</button>
+        </div>
+    </div>
+
+    <!-- Mobiele Toewijs-Modal -->
+    <dialog id="mobile-assign-modal" class="app-dialog" closedby="any" aria-labelledby="mobile-assign-title">
+        <div class="dialog-header">
+            <div>
+                <h3 id="mobile-assign-title" class="dialog-title">Activiteit inplannen</h3>
+                <p id="mobile-modal-subtitle" class="dialog-subtitle"></p>
+            </div>
+            <button type="button" class="dialog-close-btn" commandfor="mobile-assign-modal" command="close" data-close-dialog="mobile-assign-modal" aria-label="Sluiten">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div id="mobile-quick-activities" class="quick-grid" style="max-height: 12rem; overflow-y: auto;"></div>
+
+        <form id="mobile-custom-form" class="form-divider">
+            <label for="mobile-custom-input" class="field-label">Of voer een afwijkende activiteit in</label>
+            <div class="input-row">
+                <input type="text" id="mobile-custom-input" placeholder="Bijv. Gitaar oefenen..." class="text-input">
+                <button type="submit" class="btn-primary">Plan</button>
+            </div>
+            <div class="color-picker-row">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Kleur:</span>
+                <div id="mobile-custom-color-picker" class="color-dots" role="group" aria-label="Kleur voor afwijkende activiteit"></div>
+            </div>
+        </form>
+
+        <button type="button" id="btn-mobile-clear-slots" class="btn-danger-soft" style="width: 100%; justify-content: center; margin-top: 0.85rem;">
+            Geselecteerde blokken vrijmaken
+        </button>
+    </dialog>
+
+    <!-- Notitie Modal -->
+    <dialog id="note-modal" class="app-dialog" closedby="any" aria-labelledby="note-modal-title">
+        <div class="dialog-header">
+            <div>
+                <h3 id="note-modal-title" class="dialog-title">Notitie bewerken</h3>
+                <p id="note-modal-subtitle" class="dialog-subtitle"></p>
+            </div>
+            <button type="button" class="dialog-close-btn" data-close-dialog="note-modal" aria-label="Sluiten">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <form id="note-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <textarea id="note-textarea" rows="3" maxlength="200" placeholder="Voeg een korte notitie of aandachtspunt toe..." class="text-input" autofocus></textarea>
+            <div class="dialog-actions">
+                <button type="button" id="btn-delete-note" class="btn-danger-soft">Notitie wissen</button>
+                <button type="button" data-close-dialog="note-modal" class="btn-outline">Annuleren</button>
+                <button type="submit" class="btn-primary">Opslaan</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Export & Back-up Modal -->
+    <dialog id="export-modal" class="app-dialog" closedby="any" aria-labelledby="export-modal-title">
+        <div class="dialog-header">
+            <div>
+                <h3 id="export-modal-title" class="dialog-title">Resultaat exporteren &amp; back-up</h3>
+                <p class="dialog-subtitle">Overzicht van je geplande en uitgevoerde activiteiten</p>
+            </div>
+            <button type="button" class="dialog-close-btn" data-close-dialog="export-modal" aria-label="Sluiten">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="export-tabs" role="tablist" aria-label="Exportformaat">
+            <button type="button" class="export-tab" role="tab" data-export-format="txt" aria-selected="true">Tekst (.txt)</button>
+            <button type="button" class="export-tab" role="tab" data-export-format="md" aria-selected="false">Markdown (.md)</button>
+            <button type="button" class="export-tab" role="tab" data-export-format="csv" aria-selected="false">CSV (.csv)</button>
+            <button type="button" class="export-tab" role="tab" data-export-format="ics" aria-selected="false">Agenda (.ics)</button>
+        </div>
+
+        <textarea id="export-textarea" readonly class="export-textarea" aria-label="Geëxporteerde planning"></textarea>
+
+        <div class="dialog-actions">
+            <button type="button" id="btn-copy-export" class="btn-outline">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Kopieer tekst</span>
+            </button>
+            <button type="button" id="btn-download-export" class="btn-primary">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="btn-download-label">Download .txt</span>
+            </button>
+        </div>
+
+        <div class="backup-box">
+            <span class="field-label">Volledige gegevensback-up (JSON)</span>
+            <div class="backup-actions">
+                <button type="button" id="btn-export-json" class="btn-outline" style="font-size: 0.78rem;">Back-up downloaden (.json)</button>
+                <label class="btn-outline" style="font-size: 0.78rem; cursor: pointer;">
+                    <span>Back-up herstellen (.json)</span>
+                    <input type="file" id="input-import-json" accept="application/json,.json" class="sr-only">
+                </label>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Reset Bevestigingsmodal -->
+    <dialog id="reset-modal" class="app-dialog" closedby="any" aria-labelledby="reset-modal-title">
+        <div class="dialog-header">
+            <div>
+                <h3 id="reset-modal-title" class="dialog-title">Agenda resetten?</h3>
+                <p class="dialog-subtitle">Kies of je alleen de planning van <strong id="reset-day-name">deze dag</strong> wilt wissen, of alle opgeslagen dagen. Je vaste activiteitenlijst blijft bewaard.</p>
+            </div>
+            <button type="button" class="dialog-close-btn" data-close-dialog="reset-modal" aria-label="Sluiten">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="reset-stack">
+            <button type="button" id="btn-reset-current" class="btn-danger">
+                Alleen <span id="reset-btn-day-label">deze dag</span> leegmaken
+            </button>
+            <button type="button" id="btn-reset-all" class="btn-danger-soft" style="width: 100%; justify-content: center;">
+                Alle dagen leegmaken
+            </button>
+            <button type="button" data-close-dialog="reset-modal" class="btn-outline" style="width: 100%; justify-content: center;" autofocus>
+                Annuleren
+            </button>
+        </div>
+    </dialog>
+
+    <!-- Opslag & GitHub Gist Sync Modal -->
+    <dialog id="gist-modal" class="app-dialog" closedby="any" aria-labelledby="gist-modal-title">
+        <div class="dialog-header">
+            <div>
+                <h3 id="gist-modal-title" class="dialog-title">Opslag &amp; GitHub Gist-sync</h3>
+                <p class="dialog-subtitle">Kies tussen lokale browseropslag (standaard) of synchronisatie via een privé GitHub Gist.</p>
+            </div>
+            <button type="button" class="dialog-close-btn" data-close-dialog="gist-modal" aria-label="Sluiten">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="storage-mode-grid" role="group" aria-label="Opslagmethode">
+            <button type="button" id="btn-mode-local" class="storage-option" aria-pressed="true">
+                <span class="storage-option-title">Lokaal (standaard)</span>
+                <span class="storage-option-desc">Alleen in localStorage van deze browser.</span>
+            </button>
+            <button type="button" id="btn-mode-gist" class="storage-option" aria-pressed="false">
+                <span class="storage-option-title">GitHub Gist</span>
+                <span class="storage-option-desc">Synchroniseer tussen apparaten via privé Gist.</span>
+            </button>
+        </div>
+
+        <form id="gist-form" class="gist-fields">
+            <div>
+                <label for="gist-token-input" class="field-label" style="margin-bottom: 0.25rem;">GitHub Personal Access Token (<code>gist</code>-scope)</label>
+                <input type="password" id="gist-token-input" autocomplete="off" placeholder="ghp_... of github_pat_..." class="text-input" style="width: 100%;">
+                <p class="card-subtitle">Wordt alleen lokaal in je browser opgeslagen, nooit in back-ups.</p>
+            </div>
+
+            <div>
+                <label for="gist-id-input" class="field-label" style="margin-bottom: 0.25rem;">Gist ID (optioneel)</label>
+                <input type="text" id="gist-id-input" autocomplete="off" placeholder="Laat leeg om automatisch een privé Gist aan te maken" class="text-input" style="width: 100%;">
+            </div>
+
+            <div id="gist-status-box" class="gist-status-box">
+                <span id="gist-sync-info">Modus: Lokaal (localStorage)</span>
+                <a id="gist-external-link" class="gist-link hidden" target="_blank" rel="noopener noreferrer">Open Gist op GitHub</a>
+            </div>
+
+            <div class="dialog-actions" style="margin-top: 0.25rem;">
+                <button type="button" id="btn-gist-pull" class="btn-outline hidden">Ophalen van Gist</button>
+                <button type="button" id="btn-gist-push" class="btn-outline hidden">Nu opslaan naar Gist</button>
+                <button type="submit" id="btn-gist-save" class="btn-primary">Opslaan &amp; verbinden</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <script>
+        // --- Configuratie & Kleurenpalet ---
+        const COLOR_PALETTE = [
+            { id: 'emerald', label: 'Salie' },
+            { id: 'sky', label: 'Hemel' },
+            { id: 'amber', label: 'Zon' },
+            { id: 'rose', label: 'Koraal' },
+            { id: 'violet', label: 'Lavendel' },
+            { id: 'stone', label: 'Neutraal' }
+        ];
+
+        const DEFAULT_TEMPLATES = [
+            { id: 'tpl-1', name: 'Lezen', color: 'emerald' },
+            { id: 'tpl-2', name: 'Wandelen / Buiten', color: 'sky' },
+            { id: 'tpl-3', name: 'Sporten', color: 'rose' },
+            { id: 'tpl-4', name: 'Creatief project', color: 'violet' },
+            { id: 'tpl-5', name: 'Ontspannen / Rust', color: 'amber' },
+            { id: 'tpl-6', name: 'Opruimen / Klusje', color: 'stone' }
+        ];
+
+        const STORAGE_KEY = 'tijdbewust_state_v1';
+        const GIST_CONFIG_KEY = 'tijdbewust_gist_config_v1';
+        const GIST_FILENAME = 'tijdbewust-data.json';
+        const MAX_HISTORY = 30;
+
+        // --- Datumhulpfuncties ---
+        function formatDateKey(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getTodayKey() {
+            return formatDateKey(new Date());
+        }
+
+        function getTomorrowKey() {
+            const d = new Date();
+            d.setDate(d.getDate() + 1);
+            return formatDateKey(d);
+        }
+
+        function shiftDateKey(dateKey, deltaDays) {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            date.setDate(date.getDate() + deltaDays);
+            return formatDateKey(date);
+        }
+
+        function getFormattedDateLabel(dateKey) {
+            const [y, m, d] = dateKey.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            return date.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function getDayDisplayName(dateKey) {
+            if (dateKey === getTodayKey()) return 'Vandaag';
+            if (dateKey === getTomorrowKey()) return 'Morgen';
+            return getFormattedDateLabel(dateKey);
+        }
+
+        // --- Applicatie State ---
+        let state = {
+            currentDate: getTodayKey(),
+            startHour: 8,
+            endHour: 22,
+            selectedColor: 'emerald',
+            customColor: 'amber',
+            templates: [],
+            schedules: {}, // { "YYYY-MM-DD": { "08:00": { activity, color, completed, note? } } }
+            updatedAt: null
+        };
+
+        let gistConfig = {
+            mode: 'local', // 'local' | 'gist'
+            token: '',
+            gistId: '',
+            lastSyncedAt: null
+        };
+        let gistSyncTimer = null;
+        let gistSyncState = 'idle'; // 'idle' | 'syncing' | 'error'
+
+        let selectedSlots = new Set();
+        let isDragging = false;
+        let dragMode = 'select';
+        let editingTemplateId = null;
+        let editingNoteTime = null;
+        let exportFormat = 'txt';
+        let undoStack = [];
+        let redoStack = [];
+        let slotRowMap = new Map();
+
+        // --- Geschiedenis (Undo / Redo) ---
+        function createSnapshot() {
+            return JSON.stringify({
+                templates: state.templates,
+                schedules: state.schedules
+            });
+        }
+
+        function pushHistory() {
+            undoStack.push(createSnapshot());
+            if (undoStack.length > MAX_HISTORY) undoStack.shift();
+            redoStack = [];
+            updateHistoryButtons();
+        }
+
+        function restoreSnapshot(snapJson) {
+            const snap = JSON.parse(snapJson);
+            state.templates = snap.templates;
+            state.schedules = snap.schedules;
+            selectedSlots.clear();
+            saveState();
+            renderTemplates();
+            renderTimeslots();
+            updateSelectionUI();
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (undoStack.length === 0) return;
+            redoStack.push(createSnapshot());
+            const prev = undoStack.pop();
+            restoreSnapshot(prev);
+            showToast('Actie ongedaan gemaakt.');
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            undoStack.push(createSnapshot());
+            const next = redoStack.pop();
+            restoreSnapshot(next);
+            showToast('Actie opnieuw uitgevoerd.');
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('btn-undo').disabled = undoStack.length === 0;
+            document.getElementById('btn-redo').disabled = redoStack.length === 0;
+        }
+
+        // --- Opslag & Migratie ---
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    state.templates = structuredClone(DEFAULT_TEMPLATES);
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                const migratedSchedules = {};
+
+                if (parsed.schedules && typeof parsed.schedules === 'object') {
+                    for (const [k, v] of Object.entries(parsed.schedules)) {
+                        if (k === 'vandaag') {
+                            migratedSchedules[getTodayKey()] = { ...(migratedSchedules[getTodayKey()] || {}), ...v };
+                        } else if (k === 'morgen') {
+                            migratedSchedules[getTomorrowKey()] = { ...(migratedSchedules[getTomorrowKey()] || {}), ...v };
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(k)) {
+                            migratedSchedules[k] = v;
+                        }
+                    }
+                }
+
+                let currentDate = getTodayKey();
+                if (parsed.currentDate && /^\d{4}-\d{2}-\d{2}$/.test(parsed.currentDate)) {
+                    currentDate = parsed.currentDate;
+                } else if (parsed.currentDay === 'morgen') {
+                    currentDate = getTomorrowKey();
+                }
+
+                state = {
+                    ...state,
+                    currentDate,
+                    startHour: Number.isInteger(parsed.startHour) ? parsed.startHour : 8,
+                    endHour: Number.isInteger(parsed.endHour) ? parsed.endHour : 22,
+                    selectedColor: getColorId(parsed.selectedColor),
+                    customColor: getColorId(parsed.customColor || 'amber'),
+                    templates: Array.isArray(parsed.templates) && parsed.templates.length > 0
+                        ? parsed.templates
+                        : structuredClone(DEFAULT_TEMPLATES),
+                    schedules: migratedSchedules,
+                    updatedAt: parsed.updatedAt || null
+                };
+            } catch (e) {
+                console.error('Kon opgeslagen gegevens niet laden:', e);
+                state.templates = structuredClone(DEFAULT_TEMPLATES);
+            }
+        }
+
+        function saveState({ skipGistSync = false } = {}) {
+            state.updatedAt = new Date().toISOString();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.error('Kon gegevens niet opslaan:', e);
+            }
+            if (!skipGistSync && gistConfig.mode === 'gist' && gistConfig.token && gistConfig.gistId) {
+                scheduleGistPush();
+            }
+        }
+
+        // --- GitHub Gist Sync (optioneel naast localStorage) ---
+        function loadGistConfig() {
+            try {
+                const raw = localStorage.getItem(GIST_CONFIG_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    gistConfig = {
+                        mode: parsed.mode === 'gist' ? 'gist' : 'local',
+                        token: typeof parsed.token === 'string' ? parsed.token : '',
+                        gistId: typeof parsed.gistId === 'string' ? parsed.gistId : '',
+                        lastSyncedAt: parsed.lastSyncedAt || null
+                    };
+                }
+            } catch (e) {
+                console.error('Kon Gist-configuratie niet laden:', e);
+            }
+            updateSyncUI();
+        }
+
+        function saveGistConfig() {
+            try {
+                localStorage.setItem(GIST_CONFIG_KEY, JSON.stringify(gistConfig));
+            } catch (e) {
+                console.error('Kon Gist-configuratie niet opslaan:', e);
+            }
+            updateSyncUI();
+        }
+
+        function updateSyncUI() {
+            const dot = document.getElementById('sync-status-dot');
+            const label = document.getElementById('sync-status-label');
+            const isGist = gistConfig.mode === 'gist' && Boolean(gistConfig.token);
+
+            dot.className = 'sync-dot';
+            if (gistSyncState === 'syncing') {
+                dot.classList.add('is-syncing');
+                label.textContent = 'Sync...';
+            } else if (gistSyncState === 'error' && isGist) {
+                dot.classList.add('is-error');
+                label.textContent = 'Sync-fout';
+            } else if (isGist) {
+                dot.classList.add('is-gist');
+                label.textContent = 'Gist';
+            } else {
+                label.textContent = 'Lokaal';
+            }
+
+            const btnLocal = document.getElementById('btn-mode-local');
+            const btnGist = document.getElementById('btn-mode-gist');
+            if (btnLocal && btnGist) {
+                const selectedMode = gistConfig.mode === 'gist' ? 'gist' : 'local';
+                btnLocal.setAttribute('aria-pressed', selectedMode === 'local' ? 'true' : 'false');
+                btnGist.setAttribute('aria-pressed', selectedMode === 'gist' ? 'true' : 'false');
+            }
+
+            const pullBtn = document.getElementById('btn-gist-pull');
+            const pushBtn = document.getElementById('btn-gist-push');
+            const extLink = document.getElementById('gist-external-link');
+            const infoEl = document.getElementById('gist-sync-info');
+
+            if (pullBtn && pushBtn && extLink && infoEl) {
+                const connected = isGist && Boolean(gistConfig.gistId);
+                pullBtn.classList.toggle('hidden', !connected);
+                pushBtn.classList.toggle('hidden', !connected);
+                if (connected) {
+                    extLink.href = `https://gist.github.com/${encodeURIComponent(gistConfig.gistId)}`;
+                    extLink.classList.remove('hidden');
+                    const timeStr = gistConfig.lastSyncedAt
+                        ? new Date(gistConfig.lastSyncedAt).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })
+                        : 'nog niet';
+                    infoEl.textContent = `Modus: GitHub Gist · Laatst gesynchroniseerd: ${timeStr}`;
+                } else if (gistConfig.mode === 'gist') {
+                    extLink.classList.add('hidden');
+                    infoEl.textContent = 'Modus: GitHub Gist · Vul je token in en klik op Opslaan & verbinden.';
+                } else {
+                    extLink.classList.add('hidden');
+                    infoEl.textContent = 'Modus: Lokaal (localStorage)';
+                }
+            }
+        }
+
+        function scheduleGistPush() {
+            clearTimeout(gistSyncTimer);
+            gistSyncTimer = setTimeout(() => {
+                pushToGist({ silent: true });
+            }, 1500);
+        }
+
+        async function gistFetch(url, options = {}) {
+            const res = await fetch(url, {
+                ...options,
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${gistConfig.token}`,
+                    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                    ...(options.headers || {})
+                }
+            });
+            if (!res.ok) {
+                const errText = await res.text().catch(() => '');
+                throw new Error(`GitHub API ${res.status}: ${errText.slice(0, 120)}`);
+            }
+            return res.json();
+        }
+
+        async function createGist() {
+            const data = await gistFetch('https://api.github.com/gists', {
+                method: 'POST',
+                body: JSON.stringify({
+                    description: 'TijdBewust — Dagdeel Planner gegevens',
+                    public: false,
+                    files: {
+                        [GIST_FILENAME]: {
+                            content: JSON.stringify(state, null, 2)
+                        }
+                    }
+                })
+            });
+            gistConfig.gistId = data.id;
+            gistConfig.lastSyncedAt = new Date().toISOString();
+            saveGistConfig();
+            return data;
+        }
+
+        async function pushToGist({ silent = false } = {}) {
+            if (!gistConfig.token) return;
+            gistSyncState = 'syncing';
+            updateSyncUI();
+            try {
+                if (!gistConfig.gistId) {
+                    await createGist();
+                } else {
+                    await gistFetch(`https://api.github.com/gists/${encodeURIComponent(gistConfig.gistId)}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                            files: {
+                                [GIST_FILENAME]: {
+                                    content: JSON.stringify(state, null, 2)
+                                }
+                            }
+                        })
+                    });
+                    gistConfig.lastSyncedAt = new Date().toISOString();
+                    saveGistConfig();
+                }
+                gistSyncState = 'idle';
+                updateSyncUI();
+                if (!silent) showToast('Opgeslagen naar GitHub Gist.');
+            } catch (err) {
+                console.error('Gist push mislukt:', err);
+                gistSyncState = 'error';
+                updateSyncUI();
+                if (!silent) showToast('Synchronisatie naar Gist mislukt. Controleer token/ID.', 'error');
+            }
+        }
+
+        async function pullFromGist({ silent = false, onlyIfNewer = false } = {}) {
+            if (!gistConfig.token || !gistConfig.gistId) return;
+            gistSyncState = 'syncing';
+            updateSyncUI();
+            try {
+                const data = await gistFetch(`https://api.github.com/gists/${encodeURIComponent(gistConfig.gistId)}`);
+                const file = data.files?.[GIST_FILENAME];
+                if (!file || !file.content) {
+                    if (!silent) showToast('Geen planningsbestand gevonden in deze Gist; huidige planning wordt opgeslagen.');
+                    await pushToGist({ silent });
+                    return;
+                }
+                const remote = JSON.parse(file.content);
+                if (!remote || typeof remote.schedules !== 'object' || !Array.isArray(remote.templates)) {
+                    throw new Error('Ongeldige Gist-inhoud');
+                }
+                if (onlyIfNewer && state.updatedAt && remote.updatedAt && remote.updatedAt <= state.updatedAt) {
+                    gistConfig.lastSyncedAt = new Date().toISOString();
+                    gistSyncState = 'idle';
+                    saveGistConfig();
+                    return;
+                }
+                state = {
+                    ...state,
+                    ...remote,
+                    currentDate: /^\d{4}-\d{2}-\d{2}$/.test(remote.currentDate) ? remote.currentDate : state.currentDate,
+                    templates: remote.templates.length > 0 ? remote.templates : state.templates,
+                    schedules: remote.schedules || {}
+                };
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch (e) {}
+                gistConfig.lastSyncedAt = new Date().toISOString();
+                gistSyncState = 'idle';
+                saveGistConfig();
+                initHourSelects();
+                renderDayTabs();
+                renderTemplates();
+                renderTimeslots();
+                updateSelectionUI();
+                if (!silent) showToast('Planning opgehaald uit GitHub Gist.');
+            } catch (err) {
+                console.error('Gist pull mislukt:', err);
+                gistSyncState = 'error';
+                updateSyncUI();
+                if (!silent) showToast('Ophalen uit Gist mislukt. Controleer token/ID.', 'error');
+            }
+        }
+
+        function getColorId(id) {
+            return COLOR_PALETTE.some(c => c.id === id) ? id : 'emerald';
+        }
+
+        function getColorCssVars(colorId) {
+            const id = getColorId(colorId);
+            return {
+                bg: `var(--c-${id}-bg)`,
+                border: `var(--c-${id}-border)`,
+                text: `var(--c-${id}-text)`,
+                dot: `var(--c-${id}-dot)`,
+                badgeBg: `var(--c-${id}-badge-bg)`,
+                badgeText: `var(--c-${id}-badge-text)`
+            };
+        }
+
+        // --- Tijd Hulpfuncties ---
+        function formatHour(h) {
+            return String(h).padStart(2, '0') + ':00';
+        }
+
+        function generateSlotsForRange(startH, endH) {
+            const slots = [];
+            for (let h = startH; h < endH; h++) {
+                const hh = String(h).padStart(2, '0');
+                slots.push(`${hh}:00`, `${hh}:30`);
+            }
+            return slots;
+        }
+
+        function getNextSlotTime(timeStr) {
+            const [h, m] = timeStr.split(':').map(Number);
+            if (m === 0) return `${String(h).padStart(2, '0')}:30`;
+            return `${String(h + 1).padStart(2, '0')}:00`;
+        }
+
+        function getCurrentSlotTime() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = now.getMinutes() < 30 ? '00' : '30';
+            return `${hh}:${mm}`;
+        }
+
+        // --- Dag & Tijdsvenster Rendering ---
+        function setDate(dateKey) {
+            state.currentDate = dateKey;
+            selectedSlots.clear();
+            saveState();
+            renderDayTabs();
+            renderTimeslots();
+            updateSelectionUI();
+        }
+
+        function renderDayTabs() {
+            const todayKey = getTodayKey();
+            const tomorrowKey = getTomorrowKey();
+            const isToday = state.currentDate === todayKey;
+            const isTomorrow = state.currentDate === tomorrowKey;
+
+            document.getElementById('btn-day-today').classList.toggle('active', isToday);
+            document.getElementById('btn-day-tomorrow').classList.toggle('active', isTomorrow);
+            document.getElementById('date-picker').value = state.currentDate;
+
+            const titleEl = document.getElementById('current-day-title');
+            if (isToday) titleEl.textContent = 'Planning voor Vandaag';
+            else if (isTomorrow) titleEl.textContent = 'Planning voor Morgen';
+            else titleEl.textContent = 'Planning voor ' + getFormattedDateLabel(state.currentDate);
+
+            document.getElementById('current-date-label').textContent = getFormattedDateLabel(state.currentDate);
+        }
+
+        function initHourSelects() {
+            const startSel = document.getElementById('start-hour-select');
+            const endSel = document.getElementById('end-hour-select');
+            startSel.innerHTML = '';
+            endSel.innerHTML = '';
+
+            for (let h = 0; h <= 23; h++) {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = formatHour(h);
+                if (h === state.startHour) opt.selected = true;
+                startSel.appendChild(opt);
+            }
+
+            for (let h = 1; h <= 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = h === 24 ? '24:00' : formatHour(h);
+                if (h === state.endHour) opt.selected = true;
+                endSel.appendChild(opt);
+            }
+        }
+
+        function updateTimeRange() {
+            const startVal = parseInt(document.getElementById('start-hour-select').value, 10);
+            const endVal = parseInt(document.getElementById('end-hour-select').value, 10);
+            if (startVal >= endVal) {
+                showToast('De eindtijd moet na de starttijd liggen.', 'error');
+                initHourSelects();
+                return;
+            }
+            state.startHour = startVal;
+            state.endHour = endVal;
+            selectedSlots.clear();
+            saveState();
+            renderTimeslots();
+            updateSelectionUI();
+        }
+
+        // --- Tijdsblokken Rendering & Selectie ---
+        function isSameStreak(a, b) {
+            return Boolean(a && b && a.activity === b.activity && a.color === b.color);
+        }
+
+        function renderTimeslots() {
+            const container = document.getElementById('timeslots-container');
+            const slots = generateSlotsForRange(state.startHour, state.endHour);
+            const currentSchedule = state.schedules[state.currentDate] || {};
+            const isToday = state.currentDate === getTodayKey();
+            const nowSlot = isToday ? getCurrentSlotTime() : null;
+
+            container.innerHTML = '';
+            slotRowMap.clear();
+
+            // Bereken aaneengesloten blokken
+            const streakInfo = {};
+            let i = 0;
+            while (i < slots.length) {
+                const t = slots[i];
+                const entry = currentSchedule[t];
+                if (!entry) {
+                    i++;
+                    continue;
+                }
+                let j = i + 1;
+                while (j < slots.length && isSameStreak(entry, currentSchedule[slots[j]])) {
+                    j++;
+                }
+                const len = j - i;
+                for (let k = i; k < j; k++) {
+                    streakInfo[slots[k]] = {
+                        isStart: k === i,
+                        isEnd: k === j - 1,
+                        length: len
+                    };
+                }
+                i = j;
+            }
+
+            slots.forEach((time, idx) => {
+                const nextTime = getNextSlotTime(time);
+                const entry = currentSchedule[time];
+                const isSelected = selectedSlots.has(time);
+                const isHalfHour = time.endsWith(':30');
+                const isNow = time === nowSlot;
+                const streak = streakInfo[time];
+
+                const row = document.createElement('div');
+                row.dataset.time = time;
+                row.dataset.selected = isSelected ? 'true' : 'false';
+                row.setAttribute('role', 'option');
+                row.setAttribute('tabindex', '0');
+                row.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+
+                let ariaDesc = `${time} tot ${nextTime}`;
+                if (isNow) ariaDesc += ', huidig tijdvak';
+                if (entry) {
+                    ariaDesc += `, ${entry.activity}`;
+                    if (entry.completed) ariaDesc += ', afgevinkt';
+                    if (entry.note) ariaDesc += `, notitie: ${entry.note}`;
+                } else {
+                    ariaDesc += ', vrij';
+                }
+                row.setAttribute('aria-label', ariaDesc);
+
+                const classes = ['slot-row'];
+                classes.push(isHalfHour ? 'slot-half' : 'slot-hour-start');
+                if (isNow) classes.push('slot-now');
+                if (streak && streak.length > 1) {
+                    if (streak.isStart) classes.push('slot-group-start');
+                    else if (streak.isEnd) classes.push('slot-group-end');
+                    else classes.push('slot-group-mid');
+                }
+                row.className = classes.join(' ');
+
+                if (entry) {
+                    const vars = getColorCssVars(entry.color);
+                    row.style.borderLeftColor = entry.completed ? 'var(--border-strong)' : vars.border;
+                    if (!entry.completed) {
+                        row.style.backgroundColor = vars.bg;
+                    }
+                }
+
+                // Mouse & Pointer selectie
+                row.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('button')) return;
+                    isDragging = true;
+                    dragMode = selectedSlots.has(time) ? 'deselect' : 'select';
+                    toggleSlotSelection(time, dragMode);
+                });
+
+                row.addEventListener('mouseenter', () => {
+                    if (isDragging) {
+                        toggleSlotSelection(time, dragMode);
+                    }
+                });
+
+                // Toetsenbord navigatie
+                row.addEventListener('keydown', (e) => {
+                    if (e.target !== row) return;
+                    if (e.key === ' ' || e.key === 'Enter') {
+                        e.preventDefault();
+                        const mode = selectedSlots.has(time) ? 'deselect' : 'select';
+                        toggleSlotSelection(time, mode);
+                    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        const nextIdx = e.key === 'ArrowDown' ? idx + 1 : idx - 1;
+                        if (nextIdx >= 0 && nextIdx < slots.length) {
+                            const nextTimeKey = slots[nextIdx];
+                            if (e.shiftKey) {
+                                toggleSlotSelection(nextTimeKey, 'select');
+                            }
+                            slotRowMap.get(nextTimeKey)?.focus();
+                        }
+                    } else if (e.key === 'Escape' && selectedSlots.size > 0) {
+                        clearSelection();
+                    }
+                });
+
+                // Linkerkant (touch-action: none voor soepel slepen op touchscreen)
+                const leftDiv = document.createElement('div');
+                leftDiv.className = 'slot-left';
+
+                leftDiv.addEventListener('touchstart', (e) => {
+                    if (e.target.closest('button')) return;
+                    e.preventDefault();
+                    isDragging = true;
+                    dragMode = selectedSlots.has(time) ? 'deselect' : 'select';
+                    toggleSlotSelection(time, dragMode);
+                }, { passive: false });
+
+                const checkBox = document.createElement('div');
+                checkBox.className = 'slot-checkbox';
+                if (isSelected) {
+                    checkBox.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+                }
+
+                const timeLabel = document.createElement('span');
+                timeLabel.className = 'slot-time';
+                timeLabel.textContent = `${time} - ${nextTime}`;
+
+                leftDiv.appendChild(checkBox);
+                leftDiv.appendChild(timeLabel);
+
+                if (isNow) {
+                    const nowBadge = document.createElement('span');
+                    nowBadge.className = 'now-pill';
+                    nowBadge.textContent = 'Nu';
+                    leftDiv.appendChild(nowBadge);
+                }
+
+                // Midden & Rechter acties
+                const centerDiv = document.createElement('div');
+                centerDiv.className = 'slot-center';
+
+                if (entry) {
+                    const vars = getColorCssVars(entry.color);
+                    const contentWrap = document.createElement('div');
+                    contentWrap.className = 'slot-content-wrap';
+
+                    const badgeLine = document.createElement('div');
+                    badgeLine.className = 'slot-badge-line';
+
+                    const badge = document.createElement('div');
+                    badge.className = `activity-badge ${entry.completed ? 'completed' : ''}`;
+                    if (!entry.completed) {
+                        badge.style.backgroundColor = vars.badgeBg;
+                        badge.style.color = vars.badgeText;
+                    }
+
+                    const dot = document.createElement('span');
+                    dot.className = 'color-dot';
+                    dot.style.backgroundColor = entry.completed ? 'var(--text-faint)' : vars.dot;
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'activity-name';
+                    nameSpan.textContent = entry.activity;
+
+                    badge.appendChild(dot);
+                    badge.appendChild(nameSpan);
+                    badgeLine.appendChild(badge);
+
+                    if (streak && streak.length > 1 && streak.isStart) {
+                        const hrs = (streak.length * 0.5).toString().replace('.', ',');
+                        const streakPill = document.createElement('span');
+                        streakPill.className = 'streak-pill';
+                        streakPill.textContent = `${hrs} uur`;
+                        badgeLine.appendChild(streakPill);
+                    }
+
+                    contentWrap.appendChild(badgeLine);
+
+                    if (entry.note) {
+                        const noteEl = document.createElement('span');
+                        noteEl.className = 'slot-note-preview';
+                        noteEl.textContent = entry.note;
+                        contentWrap.appendChild(noteEl);
+                    }
+
+                    centerDiv.appendChild(contentWrap);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'slot-actions';
+
+                    const noteBtn = document.createElement('button');
+                    noteBtn.type = 'button';
+                    noteBtn.className = `note-btn ${entry.note ? 'has-note' : ''}`;
+                    noteBtn.title = entry.note ? 'Notitie bewerken' : 'Notitie toevoegen';
+                    noteBtn.setAttribute('aria-label', entry.note ? 'Notitie bewerken' : 'Notitie toevoegen');
+                    noteBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+                    noteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openNoteModal(time);
+                    });
+
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.className = `complete-toggle ${entry.completed ? 'is-done' : ''}`;
+                    toggleBtn.title = entry.completed ? 'Markeer als nog te doen' : 'Markeer als aan gewerkt';
+                    toggleBtn.setAttribute('aria-pressed', entry.completed ? 'true' : 'false');
+                    toggleBtn.innerHTML = entry.completed
+                        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span class="complete-label">Gedaan</span>`
+                        : `<span style="width:12px;height:12px;border-radius:9999px;border:1.5px solid var(--border-strong);display:inline-block;"></span><span class="complete-label">Afvinken</span>`;
+                    toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleSlotCompleted(time);
+                    });
+
+                    actions.appendChild(noteBtn);
+                    actions.appendChild(toggleBtn);
+                    centerDiv.appendChild(actions);
+                } else {
+                    const emptyText = document.createElement('span');
+                    emptyText.className = 'slot-empty-text';
+                    emptyText.textContent = isSelected ? 'Geselecteerd...' : 'Vrij';
+                    centerDiv.appendChild(emptyText);
+                }
+
+                row.appendChild(leftDiv);
+                row.appendChild(centerDiv);
+                container.appendChild(row);
+                slotRowMap.set(time, row);
+            });
+
+            updateProgressSummary();
+        }
+
+        function updateSlotRowSelectionVisual(time) {
+            const row = slotRowMap.get(time);
+            if (!row) return;
+            const isSelected = selectedSlots.has(time);
+            row.dataset.selected = isSelected ? 'true' : 'false';
+            row.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+
+            const checkBox = row.querySelector('.slot-checkbox');
+            if (checkBox) {
+                checkBox.innerHTML = isSelected
+                    ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`
+                    : '';
+            }
+
+            const emptyText = row.querySelector('.slot-empty-text');
+            if (emptyText) {
+                emptyText.textContent = isSelected ? 'Geselecteerd...' : 'Vrij';
+            }
+        }
+
+        function toggleSlotSelection(time, mode) {
+            const changed = mode === 'select' ? !selectedSlots.has(time) : selectedSlots.has(time);
+            if (!changed) return;
+            if (mode === 'select') selectedSlots.add(time);
+            else selectedSlots.delete(time);
+            updateSlotRowSelectionVisual(time);
+            updateSelectionUI();
+        }
+
+        function clearSelection() {
+            const prev = Array.from(selectedSlots);
+            selectedSlots.clear();
+            prev.forEach(updateSlotRowSelectionVisual);
+            updateSelectionUI();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedSlots.size;
+            const badge = document.getElementById('selection-badge');
+            const hint = document.getElementById('assign-hint');
+            const customBtn = document.getElementById('btn-assign-custom');
+            const clearSelBtn = document.getElementById('btn-clear-selection');
+            const clearSlotsWrapper = document.getElementById('clear-slots-wrapper');
+            const mobileBar = document.getElementById('mobile-floating-bar');
+            const mobileCount = document.getElementById('mobile-selection-count');
+
+            badge.textContent = `${count} ${count === 1 ? 'blok' : 'blokken'} geselecteerd`;
+
+            if (count > 0) {
+                badge.classList.add('has-selection');
+                hint.textContent = `Kies hieronder een activiteit om toe te wijzen aan ${count} halfuur-blokken.`;
+                customBtn.disabled = false;
+                clearSelBtn.classList.remove('hidden');
+
+                const currentSchedule = state.schedules[state.currentDate] || {};
+                const hasFilled = Array.from(selectedSlots).some(t => Boolean(currentSchedule[t]));
+                clearSlotsWrapper.classList.toggle('hidden', !hasFilled);
+
+                mobileCount.textContent = count;
+                mobileBar.classList.remove('is-hidden');
+            } else {
+                badge.classList.remove('has-selection');
+                hint.textContent = 'Selecteer eerst één of meerdere tijdsblokken links om een activiteit in te plannen.';
+                customBtn.disabled = true;
+                clearSelBtn.classList.add('hidden');
+                clearSlotsWrapper.classList.add('hidden');
+                mobileBar.classList.add('is-hidden');
+            }
+
+            renderQuickActivities();
+        }
+
+        function updateProgressSummary() {
+            const currentSchedule = state.schedules[state.currentDate] || {};
+            const visibleSlots = generateSlotsForRange(state.startHour, state.endHour);
+            let plannedCount = 0;
+            let completedCount = 0;
+
+            visibleSlots.forEach(time => {
+                if (currentSchedule[time]) {
+                    plannedCount++;
+                    if (currentSchedule[time].completed) completedCount++;
+                }
+            });
+
+            const summaryEl = document.getElementById('progress-summary');
+            if (plannedCount === 0) {
+                summaryEl.textContent = 'Nog geen blokken ingepland in dit dagdeel.';
+            } else {
+                const plannedHours = (plannedCount * 0.5).toString().replace('.', ',');
+                const completedHours = (completedCount * 0.5).toString().replace('.', ',');
+                summaryEl.innerHTML = `<strong style="color: var(--text-primary);">${plannedCount} blokken</strong> (${plannedHours} uur) gepland · <strong style="color: var(--brand);">${completedCount} afgevinkt</strong> (${completedHours} uur)`;
+            }
+        }
+
+        // --- Activiteiten Toewijzen, Afvinken & Notities ---
+        function assignActivityToSelected(activityName, colorId = 'emerald', note = '') {
+            if (selectedSlots.size === 0) {
+                showToast('Selecteer eerst een of meer tijdsblokken.', 'error');
+                return;
+            }
+            const cleanName = activityName.trim();
+            if (!cleanName) return;
+
+            pushHistory();
+            if (!state.schedules[state.currentDate]) {
+                state.schedules[state.currentDate] = {};
+            }
+
+            const cleanNote = note.trim();
+            selectedSlots.forEach(time => {
+                state.schedules[state.currentDate][time] = {
+                    activity: cleanName,
+                    color: getColorId(colorId),
+                    completed: false,
+                    ...(cleanNote ? { note: cleanNote } : {})
+                };
+            });
+
+            const count = selectedSlots.size;
+            selectedSlots.clear();
+            saveState();
+            renderTimeslots();
+            updateSelectionUI();
+            showToast(`"${cleanName}" ingepland (${count * 30} min).`, 'success', true);
+        }
+
+        function clearSelectedSlots() {
+            if (selectedSlots.size === 0) return;
+            const currentSchedule = state.schedules[state.currentDate] || {};
+            const hasAny = Array.from(selectedSlots).some(t => Boolean(currentSchedule[t]));
+            if (!hasAny) return;
+
+            pushHistory();
+            selectedSlots.forEach(time => delete currentSchedule[time]);
+            selectedSlots.clear();
+            saveState();
+            renderTimeslots();
+            updateSelectionUI();
+            showToast('Geselecteerde tijdsblokken vrijgemaakt.', 'success', true);
+        }
+
+        function toggleSlotCompleted(time) {
+            const currentSchedule = state.schedules[state.currentDate];
+            if (currentSchedule && currentSchedule[time]) {
+                pushHistory();
+                currentSchedule[time].completed = !currentSchedule[time].completed;
+                saveState();
+                renderTimeslots();
+            }
+        }
+
+        function openNoteModal(time) {
+            const entry = state.schedules[state.currentDate]?.[time];
+            if (!entry) return;
+            editingNoteTime = time;
+            document.getElementById('note-modal-subtitle').textContent = `${time} - ${getNextSlotTime(time)} · ${entry.activity}`;
+            document.getElementById('note-textarea').value = entry.note || '';
+            document.getElementById('btn-delete-note').classList.toggle('hidden', !entry.note);
+            document.getElementById('note-modal').showModal();
+        }
+
+        function saveSlotNote(noteText) {
+            const entry = state.schedules[state.currentDate]?.[editingNoteTime];
+            if (!entry) return;
+            pushHistory();
+            const trimmed = noteText.trim();
+            if (trimmed) entry.note = trimmed;
+            else delete entry.note;
+            saveState();
+            renderTimeslots();
+            document.getElementById('note-modal').close();
+            showToast(trimmed ? 'Notitie opgeslagen.' : 'Notitie verwijderd.');
+        }
+
+        // --- Kleurkiezers ---
+        function renderColorPickerGroup(containerId, activeColorId, onSelect) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            COLOR_PALETTE.forEach(c => {
+                const vars = getColorCssVars(c.id);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'color-swatch';
+                btn.style.backgroundColor = vars.dot;
+                btn.title = c.label;
+                btn.setAttribute('aria-label', `Kleur ${c.label}`);
+                btn.setAttribute('aria-pressed', activeColorId === c.id ? 'true' : 'false');
+                btn.addEventListener('click', () => onSelect(c.id));
+                container.appendChild(btn);
+            });
+        }
+
+        function renderAllColorPickers() {
+            renderColorPickerGroup('color-picker-container', state.selectedColor, (id) => {
+                state.selectedColor = id;
+                saveState();
+                renderAllColorPickers();
+            });
+            const updateCustomColor = (id) => {
+                state.customColor = id;
+                saveState();
+                renderAllColorPickers();
+            };
+            renderColorPickerGroup('custom-color-picker', state.customColor, updateCustomColor);
+            renderColorPickerGroup('mobile-custom-color-picker', state.customColor, updateCustomColor);
+        }
+
+        // --- Vaste Activiteiten Beheren (Toevoegen, Bewerken, Volgorde, Verwijderen) ---
+        function renderTemplates() {
+            renderQuickActivities();
+            const manageList = document.getElementById('templates-manage-list');
+            manageList.innerHTML = '';
+
+            if (state.templates.length === 0) {
+                manageList.innerHTML = `<li style="font-size: 0.78rem; color: var(--text-faint); font-style: italic; text-align: center; padding: 0.75rem;">Geen vaste activiteiten ingesteld.</li>`;
+                return;
+            }
+
+            state.templates.forEach((tpl, index) => {
+                const li = document.createElement('li');
+                li.className = 'template-item';
+
+                if (editingTemplateId === tpl.id) {
+                    let editColor = tpl.color;
+                    const wrap = document.createElement('div');
+                    wrap.className = 'template-edit-row';
+
+                    const topRow = document.createElement('div');
+                    topRow.className = 'input-row';
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 32;
+                    input.value = tpl.name;
+                    input.className = 'text-input';
+                    input.setAttribute('aria-label', 'Bewerk activiteitnaam');
+
+                    const saveBtn = document.createElement('button');
+                    saveBtn.type = 'button';
+                    saveBtn.className = 'btn-primary';
+                    saveBtn.textContent = 'Bewaar';
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.className = 'btn-outline';
+                    cancelBtn.textContent = 'Annuleer';
+
+                    topRow.appendChild(input);
+                    topRow.appendChild(saveBtn);
+                    topRow.appendChild(cancelBtn);
+
+                    const dotsRow = document.createElement('div');
+                    dotsRow.className = 'color-dots';
+                    const renderEditDots = () => {
+                        dotsRow.innerHTML = '';
+                        COLOR_PALETTE.forEach(c => {
+                            const vars = getColorCssVars(c.id);
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'color-swatch';
+                            btn.style.backgroundColor = vars.dot;
+                            btn.setAttribute('aria-label', `Kleur ${c.label}`);
+                            btn.setAttribute('aria-pressed', editColor === c.id ? 'true' : 'false');
+                            btn.addEventListener('click', () => {
+                                editColor = c.id;
+                                renderEditDots();
+                            });
+                            dotsRow.appendChild(btn);
+                        });
+                    };
+                    renderEditDots();
+
+                    const commitEdit = () => {
+                        const newName = input.value.trim();
+                        if (!newName) return;
+                        pushHistory();
+                        tpl.name = newName;
+                        tpl.color = editColor;
+                        editingTemplateId = null;
+                        saveState();
+                        renderTemplates();
+                        showToast('Activiteit bijgewerkt.');
+                    };
+
+                    saveBtn.addEventListener('click', commitEdit);
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); commitEdit(); }
+                        if (e.key === 'Escape') { editingTemplateId = null; renderTemplates(); }
+                    });
+                    cancelBtn.addEventListener('click', () => {
+                        editingTemplateId = null;
+                        renderTemplates();
+                    });
+
+                    wrap.appendChild(topRow);
+                    wrap.appendChild(dotsRow);
+                    li.appendChild(wrap);
+                    manageList.appendChild(li);
+                    setTimeout(() => input.focus(), 0);
+                    return;
+                }
+
+                const vars = getColorCssVars(tpl.color);
+                const left = document.createElement('div');
+                left.className = 'template-item-left';
+
+                const dot = document.createElement('span');
+                dot.className = 'color-dot';
+                dot.style.backgroundColor = vars.dot;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'template-name';
+                nameSpan.textContent = tpl.name;
+
+                left.appendChild(dot);
+                left.appendChild(nameSpan);
+
+                const actions = document.createElement('div');
+                actions.className = 'template-actions';
+
+                const upBtn = document.createElement('button');
+                upBtn.type = 'button';
+                upBtn.className = 'icon-btn';
+                upBtn.disabled = index === 0;
+                upBtn.title = 'Omhoog verplaatsen';
+                upBtn.setAttribute('aria-label', `${tpl.name} omhoog verplaatsen`);
+                upBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>`;
+                upBtn.addEventListener('click', () => moveTemplate(index, -1));
+
+                const downBtn = document.createElement('button');
+                downBtn.type = 'button';
+                downBtn.className = 'icon-btn';
+                downBtn.disabled = index === state.templates.length - 1;
+                downBtn.title = 'Omlaag verplaatsen';
+                downBtn.setAttribute('aria-label', `${tpl.name} omlaag verplaatsen`);
+                downBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
+                downBtn.addEventListener('click', () => moveTemplate(index, 1));
+
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'icon-btn';
+                editBtn.title = 'Bewerken';
+                editBtn.setAttribute('aria-label', `${tpl.name} bewerken`);
+                editBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+                editBtn.addEventListener('click', () => {
+                    editingTemplateId = tpl.id;
+                    renderTemplates();
+                });
+
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'icon-btn';
+                delBtn.title = 'Verwijderen';
+                delBtn.setAttribute('aria-label', `${tpl.name} verwijderen`);
+                delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                delBtn.addEventListener('click', () => deleteTemplate(tpl.id));
+
+                actions.appendChild(upBtn);
+                actions.appendChild(downBtn);
+                actions.appendChild(editBtn);
+                actions.appendChild(delBtn);
+
+                li.appendChild(left);
+                li.appendChild(actions);
+                manageList.appendChild(li);
+            });
+        }
+
+        function renderQuickActivities() {
+            const grids = [
+                document.getElementById('quick-activities-grid'),
+                document.getElementById('mobile-quick-activities')
+            ];
+            const disabled = selectedSlots.size === 0;
+
+            grids.forEach(grid => {
+                if (!grid) return;
+                grid.innerHTML = '';
+                state.templates.forEach(tpl => {
+                    const vars = getColorCssVars(tpl.color);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.disabled = disabled;
+                    btn.className = 'quick-btn';
+
+                    if (!disabled) {
+                        btn.style.backgroundColor = vars.bg;
+                        btn.style.borderColor = vars.border;
+                        btn.style.color = vars.text;
+                    }
+
+                    const dot = document.createElement('span');
+                    dot.className = 'color-dot';
+                    dot.style.backgroundColor = disabled ? 'var(--text-faint)' : vars.dot;
+
+                    const label = document.createElement('span');
+                    label.className = 'activity-name';
+                    label.textContent = tpl.name;
+
+                    btn.appendChild(dot);
+                    btn.appendChild(label);
+                    btn.addEventListener('click', () => {
+                        assignActivityToSelected(tpl.name, tpl.color);
+                        const mobileModal = document.getElementById('mobile-assign-modal');
+                        if (mobileModal.open) mobileModal.close();
+                    });
+
+                    grid.appendChild(btn);
+                });
+            });
+        }
+
+        function moveTemplate(index, delta) {
+            const target = index + delta;
+            if (target < 0 || target >= state.templates.length) return;
+            pushHistory();
+            const [item] = state.templates.splice(index, 1);
+            state.templates.splice(target, 0, item);
+            saveState();
+            renderTemplates();
+        }
+
+        function deleteTemplate(id) {
+            pushHistory();
+            state.templates = state.templates.filter(t => t.id !== id);
+            saveState();
+            renderTemplates();
+            showToast('Vaste activiteit verwijderd.', 'success', true);
+        }
+
+        // --- Exporteren (.txt, .md, .csv, .ics) & JSON Back-up ---
+        function generateExportContent(format) {
+            const dateKey = state.currentDate;
+            const dayName = getDayDisplayName(dateKey);
+            const dateStr = getFormattedDateLabel(dateKey);
+            const currentSchedule = state.schedules[dateKey] || {};
+            const allSlots = generateSlotsForRange(0, 24);
+            const entries = [];
+
+            allSlots.forEach(time => {
+                const entry = currentSchedule[time];
+                if (entry) {
+                    entries.push({ time, nextTime: getNextSlotTime(time), ...entry });
+                }
+            });
+
+            const plannedCount = entries.length;
+            const completedCount = entries.filter(e => e.completed).length;
+            const plannedHrs = (plannedCount * 0.5).toString().replace('.', ',');
+            const completedHrs = (completedCount * 0.5).toString().replace('.', ',');
+
+            if (format === 'md') {
+                const lines = [`# TijdBewust — ${dayName} (${dateStr})`, ''];
+                if (plannedCount === 0) {
+                    lines.push('_Geen activiteiten ingepland._');
+                } else {
+                    entries.forEach(e => {
+                        const mark = e.completed ? '[x]' : '[ ]';
+                        const notePart = e.note ? ` — _${e.note}_` : '';
+                        lines.push(`- ${mark} **${e.time}–${e.nextTime}** ${e.activity}${notePart}`);
+                    });
+                    lines.push('', `**Totaal gepland:** ${plannedCount} blokken (${plannedHrs} uur)  `, `**Aan gewerkt:** ${completedCount} blokken (${completedHrs} uur)`);
+                }
+                return lines.join('\n');
+            }
+
+            if (format === 'csv') {
+                const esc = (s) => `"${String(s || '').replace(/"/g, '""')}"`;
+                const lines = ['Datum,Start,Eind,Activiteit,Kleur,Afgevinkt,Notitie'];
+                entries.forEach(e => {
+                    lines.push([dateKey, e.time, e.nextTime, esc(e.activity), e.color, e.completed ? 'Ja' : 'Nee', esc(e.note)].join(','));
+                });
+                return lines.join('\n');
+            }
+
+            if (format === 'ics') {
+                const compactDate = dateKey.replace(/-/g, '');
+                const lines = [
+                    'BEGIN:VCALENDAR',
+                    'VERSION:2.0',
+                    'PRODID:-//TijdBewust//Dagdeel Planner//NL'
+                ];
+                entries.forEach((e, idx) => {
+                    const start = `${compactDate}T${e.time.replace(':', '')}00`;
+                    const endCompact = e.nextTime === '24:00' ? `${shiftDateKey(dateKey, 1).replace(/-/g, '')}T000000` : `${compactDate}T${e.nextTime.replace(':', '')}00`;
+                    lines.push(
+                        'BEGIN:VEVENT',
+                        `UID:tijdbewust-${compactDate}-${idx}@local`,
+                        `DTSTART:${start}`,
+                        `DTEND:${endCompact}`,
+                        `SUMMARY:${e.activity}`,
+                        ...(e.note ? [`DESCRIPTION:${e.note.replace(/\n/g, '\\n')}`] : []),
+                        'END:VEVENT'
+                    );
+                });
+                lines.push('END:VCALENDAR');
+                return lines.join('\r\n');
+            }
+
+            // Standaard .txt
+            const lines = [
+                `TIJDBEWUST PLANNING — ${dayName.toUpperCase()} (${dateStr})`,
+                '=================================================='
+            ];
+            if (plannedCount === 0) {
+                lines.push('(Geen activiteiten ingepland)');
+            } else {
+                entries.forEach(e => {
+                    const mark = e.completed ? '[x]' : '[ ]';
+                    const notePart = e.note ? ` (${e.note})` : '';
+                    lines.push(`${mark} ${e.time} - ${e.nextTime} | ${e.activity}${notePart}`);
+                });
+                lines.push('--------------------------------------------------');
+                lines.push(`Totaal gepland : ${plannedCount} blokken (${plannedHrs} uur)`);
+                lines.push(`Aan gewerkt    : ${completedCount} blokken (${completedHrs} uur)`);
+            }
+            return lines.join('\n');
+        }
+
+        function refreshExportPreview() {
+            document.getElementById('export-textarea').value = generateExportContent(exportFormat);
+            document.getElementById('btn-download-label').textContent = `Download .${exportFormat}`;
+            document.querySelectorAll('[data-export-format]').forEach(tab => {
+                tab.setAttribute('aria-selected', tab.dataset.exportFormat === exportFormat ? 'true' : 'false');
+            });
+        }
+
+        async function copyExportText() {
+            const text = document.getElementById('export-textarea').value;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const ta = document.getElementById('export-textarea');
+                    ta.select();
+                    document.execCommand('copy');
+                }
+                showToast('Overzicht gekopieerd naar klembord!');
+            } catch (err) {
+                showToast('Kopiëren mislukt, selecteer de tekst handmatig.', 'error');
+            }
+        }
+
+        function downloadBlob(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Resetten ---
+        function resetSchedule(scope) {
+            pushHistory();
+            if (scope === 'current') {
+                delete state.schedules[state.currentDate];
+                showToast(`Planning van ${getDayDisplayName(state.currentDate)} is gewist.`, 'success', true);
+            } else {
+                state.schedules = {};
+                showToast('Alle geplande dagen zijn gewist.', 'success', true);
+            }
+            selectedSlots.clear();
+            saveState();
+            renderTimeslots();
+            updateSelectionUI();
+            document.getElementById('reset-modal').close();
+        }
+
+        // --- Thema Toggle (2-status model: Systeemstandaard vs Override) ---
+        function getSystemPrefersDark() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+
+        function toggleTheme() {
+            const meta = document.querySelector('meta[name="color-scheme"]');
+            let stored = null;
+            try { stored = localStorage.getItem('color-scheme'); } catch (e) {}
+
+            const currentlyDark = stored ? stored === 'dark' : getSystemPrefersDark();
+            const target = currentlyDark ? 'light' : 'dark';
+            const systemIsTarget = target === (getSystemPrefersDark() ? 'dark' : 'light');
+
+            try {
+                if (systemIsTarget) {
+                    localStorage.removeItem('color-scheme');
+                    meta.content = 'light dark';
+                } else {
+                    localStorage.setItem('color-scheme', target);
+                    meta.content = target;
+                }
+            } catch (e) {
+                meta.content = systemIsTarget ? 'light dark' : target;
+            }
+        }
+
+        // --- Toast Meldingen ---
+        function showToast(message, type = 'success', allowUndo = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type === 'error' ? 'toast-error' : ''}`;
+
+            const msgSpan = document.createElement('span');
+            msgSpan.textContent = message;
+            toast.appendChild(msgSpan);
+
+            if (allowUndo && undoStack.length > 0) {
+                const undoBtn = document.createElement('button');
+                undoBtn.type = 'button';
+                undoBtn.className = 'toast-undo-btn';
+                undoBtn.textContent = 'Ongedaan maken';
+                undoBtn.addEventListener('click', () => {
+                    toast.remove();
+                    undo();
+                });
+                toast.appendChild(undoBtn);
+            }
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('is-leaving');
+                setTimeout(() => toast.remove(), 260);
+            }, 3400);
+        }
+
+        // --- Light-dismiss Fallback voor <dialog closedby="any"> ---
+        function setupDialogFallbacks() {
+            if (!('closedBy' in HTMLDialogElement.prototype)) {
+                const outside = (e, dialog) => {
+                    const r = dialog.getBoundingClientRect();
+                    return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+                };
+                for (const dialog of document.querySelectorAll('dialog[closedby="any"]')) {
+                    let pressedOutside = false;
+                    dialog.addEventListener('pointerdown', (e) => { pressedOutside = outside(e, dialog); });
+                    dialog.addEventListener('pointerup', (e) => { if (pressedOutside && outside(e, dialog)) dialog.close(); });
+                }
+            }
+
+            document.querySelectorAll('[data-close-dialog]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.getElementById(btn.dataset.closeDialog)?.close();
+                });
+            });
+        }
+
+        // --- Initialisatie & Event Listeners ---
+        function init() {
+            loadState();
+            loadGistConfig();
+            initHourSelects();
+            renderAllColorPickers();
+            renderDayTabs();
+            renderTemplates();
+            renderTimeslots();
+            updateSelectionUI();
+            updateHistoryButtons();
+            setupDialogFallbacks();
+
+            if (gistConfig.mode === 'gist' && gistConfig.token && gistConfig.gistId) {
+                pullFromGist({ silent: true, onlyIfNewer: true });
+            }
+
+            // Dag navigatie
+            document.getElementById('btn-day-today').addEventListener('click', () => setDate(getTodayKey()));
+            document.getElementById('btn-day-tomorrow').addEventListener('click', () => setDate(getTomorrowKey()));
+            document.getElementById('btn-prev-day').addEventListener('click', () => setDate(shiftDateKey(state.currentDate, -1)));
+            document.getElementById('btn-next-day').addEventListener('click', () => setDate(shiftDateKey(state.currentDate, 1)));
+            document.getElementById('date-picker').addEventListener('change', (e) => {
+                if (e.target.value) setDate(e.target.value);
+            });
+
+            // Tijdsvenster
+            document.getElementById('start-hour-select').addEventListener('change', updateTimeRange);
+            document.getElementById('end-hour-select').addEventListener('change', updateTimeRange);
+
+            // Selectie wissen & vrijmaken
+            document.getElementById('btn-clear-selection').addEventListener('click', clearSelection);
+            document.getElementById('btn-clear-slots').addEventListener('click', clearSelectedSlots);
+
+            // Undo / Redo & Thema
+            document.getElementById('btn-undo').addEventListener('click', undo);
+            document.getElementById('btn-redo').addEventListener('click', redo);
+            document.getElementById('btn-theme-toggle').addEventListener('click', toggleTheme);
+
+            // Formulieren
+            document.getElementById('custom-activity-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('custom-activity-input');
+                const noteInput = document.getElementById('custom-note-input');
+                const val = input.value.trim();
+                if (!val) return;
+                assignActivityToSelected(val, state.customColor, noteInput.value);
+                input.value = '';
+                noteInput.value = '';
+            });
+
+            document.getElementById('add-template-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('new-template-name');
+                const name = input.value.trim();
+                if (!name) return;
+                pushHistory();
+                state.templates.push({
+                    id: 'tpl-' + Date.now(),
+                    name,
+                    color: state.selectedColor
+                });
+                input.value = '';
+                saveState();
+                renderTemplates();
+                showToast(`"${name}" toegevoegd aan je lijst.`);
+            });
+
+            // Mobiele balk & modal
+            document.getElementById('btn-mobile-cancel').addEventListener('click', clearSelection);
+            document.getElementById('btn-mobile-open-assign').addEventListener('click', () => {
+                if (selectedSlots.size === 0) return;
+                document.getElementById('mobile-modal-subtitle').textContent = `${selectedSlots.size} tijdsblok(ken) geselecteerd (${selectedSlots.size * 30} minuten)`;
+                renderQuickActivities();
+                document.getElementById('mobile-assign-modal').showModal();
+            });
+            document.getElementById('mobile-custom-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const input = document.getElementById('mobile-custom-input');
+                const val = input.value.trim();
+                if (!val) return;
+                assignActivityToSelected(val, state.customColor);
+                input.value = '';
+                document.getElementById('mobile-assign-modal').close();
+            });
+            document.getElementById('btn-mobile-clear-slots').addEventListener('click', () => {
+                clearSelectedSlots();
+                document.getElementById('mobile-assign-modal').close();
+            });
+
+            // Notitie modal
+            document.getElementById('note-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveSlotNote(document.getElementById('note-textarea').value);
+            });
+            document.getElementById('btn-delete-note').addEventListener('click', () => saveSlotNote(''));
+
+            // Export modal
+            document.getElementById('btn-open-export').addEventListener('click', () => {
+                refreshExportPreview();
+                document.getElementById('export-modal').showModal();
+            });
+            document.querySelectorAll('[data-export-format]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    exportFormat = tab.dataset.exportFormat;
+                    refreshExportPreview();
+                });
+            });
+            document.getElementById('btn-copy-export').addEventListener('click', copyExportText);
+            document.getElementById('btn-download-export').addEventListener('click', () => {
+                const content = document.getElementById('export-textarea').value;
+                const mime = exportFormat === 'ics' ? 'text/calendar;charset=utf-8' : 'text/plain;charset=utf-8';
+                downloadBlob(content, `tijdbewust-${state.currentDate}.${exportFormat}`, mime);
+                showToast('Bestand gedownload.');
+            });
+
+            // JSON Back-up Export / Import
+            document.getElementById('btn-export-json').addEventListener('click', () => {
+                const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), state }, null, 2);
+                downloadBlob(payload, `tijdbewust-backup-${getTodayKey()}.json`, 'application/json;charset=utf-8');
+                showToast('JSON-back-up gedownload.');
+            });
+            document.getElementById('input-import-json').addEventListener('change', async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                    const text = await file.text();
+                    const parsed = JSON.parse(text);
+                    const imported = parsed.state || parsed;
+                    if (!imported || typeof imported.schedules !== 'object' || !Array.isArray(imported.templates)) {
+                        throw new Error('Ongeldig back-upformaat');
+                    }
+                    pushHistory();
+                    state.templates = imported.templates;
+                    state.schedules = imported.schedules;
+                    if (Number.isInteger(imported.startHour)) state.startHour = imported.startHour;
+                    if (Number.isInteger(imported.endHour)) state.endHour = imported.endHour;
+                    selectedSlots.clear();
+                    saveState();
+                    initHourSelects();
+                    renderTemplates();
+                    renderTimeslots();
+                    updateSelectionUI();
+                    showToast('Back-up hersteld!', 'success', true);
+                } catch (err) {
+                    showToast('Kon back-up niet laden: ongeldig bestand.', 'error');
+                } finally {
+                    e.target.value = '';
+                }
+            });
+
+            // Reset modal
+            document.getElementById('btn-open-reset').addEventListener('click', () => {
+                const name = getDayDisplayName(state.currentDate);
+                document.getElementById('reset-day-name').textContent = name;
+                document.getElementById('reset-btn-day-label').textContent = name;
+                document.getElementById('reset-modal').showModal();
+            });
+            document.getElementById('btn-reset-current').addEventListener('click', () => resetSchedule('current'));
+            document.getElementById('btn-reset-all').addEventListener('click', () => resetSchedule('all'));
+
+            // Touchmove drag over tijdsblokken
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                const touch = e.touches[0];
+                if (!touch) return;
+                const el = document.elementFromPoint(touch.clientX, touch.clientY);
+                const row = el?.closest?.('.slot-row');
+                if (row?.dataset.time) {
+                    toggleSlotSelection(row.dataset.time, dragMode);
+                }
+            }, { passive: true });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            window.addEventListener('touchend', () => { isDragging = false; });
+            window.addEventListener('touchcancel', () => { isDragging = false; });
+
+            // Sneltoetsen (Ctrl/Cmd+Z voor Undo, Ctrl/Cmd+Shift+Z voor Redo)
+            window.addEventListener('keydown', (e) => {
+                const tag = document.activeElement?.tagName;
+                if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    if (e.shiftKey) redo();
+                    else undo();
+                }
+            });
+
+            // Synchroniseer kleurthema tussen tabbladen
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'color-scheme') {
+                    document.querySelector('meta[name="color-scheme"]').content = e.newValue || 'light dark';
+                }
+            });
+
+            // Werk 'Nu'-indicator elke minuut bij
+            setInterval(() => {
+                if (state.currentDate === getTodayKey()) {
+                    renderTimeslots();
+                }
+            }, 60000);
+
+            // Registreer Service Worker voor offline PWA (alleen via HTTP/HTTPS)
+            if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            }
+
+            // Opslag & GitHub Gist modal
+            document.getElementById('btn-open-gist').addEventListener('click', () => {
+                document.getElementById('gist-token-input').value = gistConfig.token;
+                document.getElementById('gist-id-input').value = gistConfig.gistId;
+                updateSyncUI();
+                document.getElementById('gist-modal').showModal();
+            });
+
+            document.getElementById('btn-mode-local').addEventListener('click', () => {
+                gistConfig.mode = 'local';
+                saveGistConfig();
+                showToast('Opslagmodus ingesteld op Lokaal (localStorage).');
+            });
+
+            document.getElementById('btn-mode-gist').addEventListener('click', () => {
+                gistConfig.mode = 'gist';
+                saveGistConfig();
+            });
+
+            document.getElementById('gist-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const token = document.getElementById('gist-token-input').value.trim();
+                const gistId = document.getElementById('gist-id-input').value.trim();
+                if (!token) {
+                    gistConfig.mode = 'local';
+                    gistConfig.token = '';
+                    gistConfig.gistId = '';
+                    saveGistConfig();
+                    document.getElementById('gist-modal').close();
+                    showToast('Opslagmodus ingesteld op Lokaal (localStorage).');
+                    return;
+                }
+                gistConfig.mode = 'gist';
+                gistConfig.token = token;
+                gistConfig.gistId = gistId;
+                saveGistConfig();
+
+                if (!gistId) {
+                    await pushToGist({ silent: false });
+                    document.getElementById('gist-id-input').value = gistConfig.gistId;
+                } else {
+                    await pullFromGist({ silent: false, onlyIfNewer: false });
+                }
+            });
+
+            document.getElementById('btn-gist-pull').addEventListener('click', () => pullFromGist({ silent: false }));
+            document.getElementById('btn-gist-push').addEventListener('click', () => pushToGist({ silent: false }));
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
